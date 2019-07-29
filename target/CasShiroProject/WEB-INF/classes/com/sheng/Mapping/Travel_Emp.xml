@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.sheng.vo.Mapping.Travel_Emp">
+     <select id="findAllById" parameterType="long" resultType="Travel_Emp">
+         SELECT eid FROM travel_emp WHERE tid=#{tid}
+     </select>
+
+    <insert id="insert" parameterType="Travel_Emp">
+        INSERT INTO travel_emp (tid,eid) VALUES (#{tid},#{eid})
+    </insert>
+
+
+    <!--查询符合条件的总记录数-->
+    <select id="getAllCount" parameterType="map" resultType="int">
+        SELECT count(*) FROM travel_emp
+        <where>
+            <if test="seid !=null">
+                tid=#{tid}
+            </if>
+            <if test="column !=null and keyword !=null">
+                AND #{column} LIKE #{keyword}
+            </if>
+        </where>
+    </select>
+
+    <!--查询Travel表中重点内容,完成个人信息申请记录列表,并设置模糊查询与分页处理-->
+    <select id="findAllSpilt" parameterType="map" resultType="Travel_Emp">
+        SELECT teid,tid,eid
+        FROM travel_emp
+        <where>
+            <if test="column !=null and keyword !=null">
+                AND  ${column} LIKE #{keyword}
+            </if>
+        </where>
+        LIMIT #{start},#{linesize}
+    </select>
+</mapper>

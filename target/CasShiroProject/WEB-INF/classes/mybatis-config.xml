@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <settings>
+        <!--启用二级缓存-->
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+
+    <!--定义别名,别名的用处在于方便用,否则type类型需要引用vo类的路径才可以找到,例如:cn.sheng.vo.Member-->
+    <typeAliases>
+        <typeAlias type="com.sheng.vo.Action" alias="Action"/>
+        <typeAlias type="com.sheng.vo.Dept" alias="Dept"/>
+        <typeAlias type="com.sheng.vo.Emp" alias="Emp"/>
+        <typeAlias type="com.sheng.vo.Level" alias="Level"/>
+        <typeAlias type="com.sheng.vo.Role" alias="Role"/>
+        <typeAlias type="com.sheng.vo.Item" alias="Item"/>
+        <typeAlias type="com.sheng.vo.Travel" alias="Travel"/>
+        <typeAlias type="com.sheng.vo.Travel_Emp" alias="Travel_Emp"/>
+        <typeAlias type="com.sheng.vo.Type" alias="Type"/>
+        <typeAlias type="com.sheng.vo.TravelCost" alias="TravelCost"/>
+    </typeAliases>
+
+
+
+    <mappers>
+        <!--一个实体类都会一个配套的xml-->
+        <!--这是告诉Mybatis区哪找持久化类的映射文件，对于在src下的文件直接写文件名，
+            如果在某包下，则要写明路径,如：com/mybatistest/config/User.xml-->
+        <mapper resource="com/sheng/Mapping/Action.xml"/>
+        <mapper resource="com/sheng/Mapping/Dept.xml"/>
+        <mapper resource="com/sheng/Mapping/Emp.xml"/>
+        <mapper resource="com/sheng/Mapping/Level.xml"/>
+        <mapper resource="com/sheng/Mapping/Role.xml"/>
+        <mapper resource="com/sheng/Mapping/Item.xml"/>
+        <mapper resource="com/sheng/Mapping/Travel.xml"/>
+        <mapper resource="com/sheng/Mapping/Travel_Emp.xml"/>
+        <mapper resource="com/sheng/Mapping/Type.xml"/>
+        <mapper resource="com/sheng/Mapping/Travel_Cost.xml"/>
+
+    </mappers>
+
+</configuration>
+
+
+<!--级联关系,分为一对一和一对多,例如:一个商品分类包含多个商品那么此种为1对多,一个商品查找自己属于的分类,此属于
+一对一,一对多和一对一在mybatis中在resultMap中配置,所以也注定了,只有查询时候才能使用级联关系,一对一一般返回一个vo类
+而一对多一般返回一个集合.但是在Mybaits中,没有多对多的关系,只可以拿一对多和一对多进行拼凑成多对多的关系,级联标签只用于查询
+当更新或者删除,一般都是用for循环加数组的方式循环删除-->

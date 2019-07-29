@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.sheng.vo.Mapping.Dept">
+    <select id="findAll" resultType="Dept">
+        SELECT did,dname,eid FROM dept
+    </select>
+
+    <update id="doUpate" parameterType="Dept">
+        UPDATE dept SET dname=#{dname} WHERE did=#{did}
+    </update>
+
+    <select id="findAllById" parameterType="long" resultType="Dept">
+        SELECT did,dname,eid FROM dept WHERE did=#{did}
+    </select>
+
+    <!--根据部门编号,更新领导信息-->
+    <update id="doDeptManager" parameterType="Dept">
+        UPDATE dept SET eid=#{eid} WHERE did=#{did}
+    </update>
+
+</mapper>

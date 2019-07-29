@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.sheng.vo.Mapping.Action">
+    <!--根据角色id查询其拥有的权限,根据角色名称查询出权限名称-->
+    <select id="findActionByRole" parameterType="String" resultType="String">
+        SELECT title FROM action WHERE actid IN (SELECT actid FROM action_role
+         WHERE rid IN (SELECT rid FROM role WHERE title=#{title}))
+    </select>
+</mapper>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                          http://www.springframework.org/schema/beans/spring-beans.xsd
+                          http://www.springframework.org/schema/context
+                          http://www.springframework.org/schema/context/spring-context.xsd
+                          http://www.springframework.org/schema/task
+                          http://www.springframework.org/schema/task/spring-task.xsd
+                          http://www.springframework.org/schema/aop
+                          http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tool http://www.springframework.org/schema/tool/spring-tool.xsd
+                          http://www.springframework.org/schema/mvc
+                          http://www.springframework.org/schema/mvc/spring-mvc.xsd"
+                          >
+    <context:annotation-config/>
+    <!--启动轻量级定时调度器 springTask-->
+    <task:annotation-driven />
+    <context:component-scan base-package="com.sheng"/>
+     <!--在web容器启动后.action的数据都会交由dispathcher类处理,dispatcherServlet类需要在application.xml
+     进行配置-->
+    <mvc:annotation-driven/>
+    <mvc:default-servlet-handler/>
+    <!--在springMVC-servlet.xml中配置<mvc:default-servlet-handler />后，会在Spring MVC上下文中定义一个
+    org.springframework.web.servlet.resource.DefaultServletHttpRequestHandler，它会像一个检查员，
+    对进入DispatcherServlet的URL进行筛查，如果发现是静态资源的请求，就将该请求转由Web应用服务器默认的Servlet
+    处理，如果不是静态资源的请求，才由DispatcherServlet继续处理。-->
+
+    <!--拦截器经过如下配置才可以起作用-->
+    <!--拦截器配置操作,可以发现,在整个过程中,拦截器就是aop原理-->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!--设置拦截器所要处理的路径(拦截与否要看拦截器的通过条件)-->
+            <mvc:mapping path="/addEmpDeatils.action"/>
+            <!--配置拦截器所在的类-->
+            <bean class="com.sheng.Interceptor.MyInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!--导入spring-redis配置文件-->
+    <!--<context:property-placeholder location="classpath:redis.properties"/>-->
+    <!--配置jedis连接池设置-->
+    <!--<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <property name="maxIdle" value="${redis.pool.maxIdle}"></property>
+        <property name="maxTotal" value="${redis.pool.maxTotal}"></property>
+        <property name="maxWaitMillis" value="${redis.pool.maxWaitMillis}"></property>
+        <property name="testOnBorrow" value="${redis.pool.testOnBorrow}"></property>
+    </bean>
+
+    &lt;!&ndash;配置jedis连接工厂&ndash;&gt;
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="usePool" value="${redis.pool.testOnReturn}"></property>
+        <property name="hostName" value="${redis.host}"></property>
+        <property name="port" value="${redis.port}"></property>
+        <property name="poolConfig" ref="jedisPoolConfig"></property>
+    </bean>
+
+    &lt;!&ndash;配置redis操作模板&ndash;&gt;
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory"></property>
+        <property name="keySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+        </property>
+        &lt;!&ndash; 解决读取int类型value值报错的问题 &ndash;&gt;
+        <property name="valueSerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+        </property>
+        <property name="hashKeySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"></bean>
+        </property>
+    </bean>-->
+
+    <!--在dateSource中,每一次的调用都需要进行开关,那么性能就不能最大化体现,所以在此时出现了c3p0数据库
+    连接池,在连接池中,才能将性能发挥到最大化-->
+    <!--在全文中引入properties文件-->
+    <context:property-placeholder location="classpath*:DateConnection.Properties" />
+    <!--配置c3p0连接池-->
+    <!--也就是测试类中的dateSorce datesouce=context.getBean("datesource")-->
+    <bean id="dateSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <!--${}是引入properties文件内容的-->
+        <property name="driverClass" value="${db.driver}"/>
+        <property name="jdbcUrl" value="${db.url}"/>
+        <property name="user" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+        <property name="maxPoolSize" value="${pool.max}"/>
+        <property name="minPoolSize" value="${pool.min}"/>
+        <property name="initialPoolSize" value="${pool.init}"/>
+        <property name="maxIdleTime" value="${pool.idle}"/>
+    </bean>
+    <!--配置Jdbc模板(springTemplate),也就是测试中的jdbcTemple jt= new jdbcTemplate(datesorce)-->
+    <bean id="JdbcTemple" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dateSource"/>
+    </bean>
+
+    <!--配置spring-Mybatis整合jar包,此操作完成的功能是把Mybatis的sqlSessionFactory交由Spring管理-->
+    <!--<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        &lt;!&ndash;将c3P0连接池引入MyBatis以便获得数据库连接&ndash;&gt;
+        <property name="dataSource" ref="dateSource"/>
+        &lt;!&ndash;引入Mybatis配置文件&ndash;&gt;
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+    </bean>-->
+
+
+
+<!--     <bean id="memberRealm" class="com.sheng.Realm.MemberRealm">
+        &lt;!&ndash;配置CAS服务器的地址&ndash;&gt;
+        <property name="casServerUrlPrefix" value="https://cas.com"/>
+        &lt;!&ndash;配置CAS服务器的回调服务器地址&ndash;&gt;
+        <property name="casService" value="http://127.0.0.1:8080/shiro-cas"/>
+    </bean>
+
+    &lt;!&ndash;配置CAS访问过滤器&ndash;&gt;
+    <bean id="casFilter" class="org.apache.shiro.cas.CasFilter">
+        &lt;!&ndash;失败后访问的过滤器&ndash;&gt;
+        <property name="failureUrl" value="http://127.0.0.1:8080/travel-edit.jsp"/>
+    </bean>
+
+    &lt;!&ndash;配置登陆注销过滤器&ndash;&gt;
+    <bean id="logoutFilter" class="org.apache.shiro.web.filter.authc.LogoutFilter">
+        <property name="redirectUrl" value="https://cas.com/loginout?service=http://127.0.0.1:8080/shiro-cas"/>
+    </bean>
+    <bean id="casSubjectFactory" class="org.apache.shiro.cas.CasSubjectFactory"></bean>-->
+
+    <!--配置安全管理器-->
+    <bean id="scurityManage" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <!--配置你需要使用的Realms-->
+        <property name="realm" ref="empRealm"/>
+        <!--注入shiro的session管理器-->
+        <!--<property name="sessionManager" ref="sessionManager"/>-->
+    </bean>
+
+     <!--Session ID 生成器 -->
+   <!-- <bean id="sessionIdGenerator" class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"></bean>-->
+
+    <!--自定义session处理类-->
+  <!--  <bean id="RedisSessionDao" class="com.sheng.Session.RedisSessionDao">
+        &lt;!&ndash;将ID生成器放入自定义Session类,因为继承了父类,父类需要一个sessionID生成器&ndash;&gt;
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+    </bean>-->
+     <!--session管理 -->
+    <!--<bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="1800000"></property>
+        <property name="deleteInvalidSessions" value="true"></property>
+        <property name="sessionDAO" ref="RedisSessionDao"></property>
+        &lt;!&ndash; sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID &ndash;&gt;
+        <property name="sessionIdCookie" ref="sharesession" />
+    </bean>-->
+    <!-- sessionIdCookie的实现,用于重写覆盖容器默认的JSESSIONID -->
+    <!--<bean id="sharesession" class="org.apache.shiro.web.servlet.SimpleCookie">
+        &lt;!&ndash; cookie的name,对应的默认是 JSESSIONID &ndash;&gt;
+        <constructor-arg name="name" value="SHAREJSESSIONID" />
+        &lt;!&ndash; jsessionId的path为 / 用于多个系统共享jsessionId &ndash;&gt;
+        <property name="path" value="/" />
+        <property name="httpOnly" value="true"/>
+    </bean>-->
+
+
+    <!--配置shiro过滤器-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!--配置一个安全过滤器-->
+        <property name="securityManager" ref="scurityManage"/>
+        <!--认证成功后跳转的路径-->
+        <property name="successUrl" value="/ListAll.action"/>
+        <!--出现错误的时候跳转路径-->
+        <property name="loginUrl" value="/LoginUrl.action"/>
+        <!--shiro里面需要针对所有的路径进行配置,所有的配置都要经过文本的形式设置
+        本质上也就是shiro.ini中的[urls]-->
+        <property name="filterChainDefinitions">
+            <!--在此shiro过滤路径中,authc代表必须登陆才可以,rememberMe无效-->
+            <!--user,代表只要登陆过,记住密码也可以-->
+            <value>
+                <!--你的票根返回路径必须使用casFilter-->
+                <!--/shiro-cas=casFilter-->
+                /emp-add.jsp=user
+                /emp-list.jsp=user
+                /travel-creat.jsp=user
+                /ListAll.action=user
+                /LimitEmp.action=user
+                /TravelsList.action=user
+            </value>
+        </property>
+    </bean>
+
+
+
+
+
+
+    <!--配置shiro的生命周期由Spring进行控制-->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!--shiro框架配置annotation操作,项目为了方便操作,普遍annotation只在控制层控制方法进行使用
+    很少在项目网页路径上检测-->
+    <!--1.启动Annotation在shiro中相关操作-->
+    <!--<bean id="defaultAdvisorAutoProxyCreator"
+          class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor">
+        &lt;!&ndash;进行目标代理类处理控制&ndash;&gt;
+        <property name="proxyTargetClass" value="true"/>
+    </bean>-->
+    <!--2.针对安全管理Aop实现也就是启动spring代理shiro的scurityManager-->
+    <bean id="authorizationAttributeSourceAdvisor"
+          class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="scurityManage"/>
+    </bean>
+
+
+
+    <!--在web项目开发中,需要大量的资源配置文件,例如:存放很多固定网址的Message.properties,例如:
+    存放很多提示语句的Url.properties,可以通过application.xml配置,引入到项目中,负责配置的类是ResourceBundleMessageSource
+    ,此类中负责引入配置文件的方法是setBasename(String...),得到配置文件的类是MessageResource-->
+   <!-- <bean id="MessageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basenames">
+            <array>
+                <value>Vaildators</value>
+                <value>Message</value>
+            </array>
+        </property>
+        <property name="defaultEncoding" value="utf-8"/>
+    </bean>-->
+
+
+</beans>
+
+

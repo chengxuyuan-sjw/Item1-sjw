@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.sheng.vo.Mapping.Emp">
+    <!--员工表进行的操作-->
+    <select id="findAllById" parameterType="Emp" resultType="Emp">
+        SELECT eid,did,lid,ename,sal,phone,password,photo,note,hiredate,ineid,locked
+        FROM emp WHERE eid=#{eid} AND locked!=1
+    </select>
+
+    <!--查询出所有领导的信息,领导也属于雇员,所以想查询出详细的信息-->
+    <!--查询出所有部门的员工部分信息-->
+    <select id="findAllManager"  resultType="Emp">
+        SELECT eid,did,ename
+        FROM emp WHERE did IN(
+          SELECT did FROM dept
+        ) AND locked!=1
+    </select>
+
+    <!--更改雇员级别信息,例如:经理升总监,亦或是经理降员工-->
+    <update id="UpdateLid" parameterType="Emp" >
+        UPDATE emp SET lid=#{lid} WHERE eid=#{eid}
+    </update>
+
+    <!--查询出所有数据-->
+    <select id="findAll" resultType="Emp">
+        SELECT eid,did,lid,ename,sal,phone,password,photo,note,hiredate,ineid,locked
+        FROM emp
+    </select>
+
+    <!--查询出数据的总条数-->
+    <select id="getAllCount" parameterType="map" resultType="int">
+        select Count(*) from emp
+        <where>
+             locked!=1
+            <if test="column !=null and keyword !=null">
+                AND ${column} LIKE #{keyword}
+            </if>
+        </where>
+    </select>
+
+
+    <!--查询出符合条件的数据并分页处理-->
+    <select id="findAllSplit" parameterType="map" resultType="Emp">
+        SELECT eid,did,lid,ename,sal,phone,password,photo,note,hiredate,ineid,locked
+        FROM emp
+        <where>
+            locked!=1
+            <if test="column !=null and keyword !=null">
+                AND ${column} LIKE #{keyword}
+            </if>
+        </where>
+        LIMIT #{start},#{linesize}
+    </select>
+
+    <update id="UpdateEmp" parameterType="map" >
+        UPDATE emp SET did=#{did},lid=#{lid},phone=#{phone},locked=#{locked}
+        WHERE eid=#{eid}
+    </update>
+
+
+    <!--查询指定的eid序列数据,且保证locked不等于1-->
+    <select id="findEmpByIds"  resultType="Emp">
+        SELECT eid,did,lid,ename,sal,phone,password,photo,note,hiredate,ineid,locked
+        FROM emp
+        <where>
+            eid IN
+            <foreach collection="array" open="(" close=")" separator="," item="ids">
+                #{ids.eid}
+            </foreach>
+            AND locked!=1
+        </where>
+    </select>
+
+
+    <!--删除雇员也就是锁定用户,下面定义更新用户状态的方法-->
+    <update id="UpdateLocked" parameterType="Emp" >
+        UPDATE emp SET locked=#{locked} WHERE eid=#{eid}
+    </update>
+
+    <!--新建员工信息-->
+    <insert id="doCreatEmp" parameterType="Emp">
+        INSERT INTO emp(eid,did,lid,ename,sal,phone,password,photo,hiredate,ineid,locked)
+        VALUES (#{eid},#{did},#{lid},#{ename},#{sal},#{phone},#{password},#{photo},#{hiredate},#{ineid},#{locked})
+    </insert>
+
+
+    <!--根据角色eid查询出部门编号和等级-->
+    <select id="findLidAndDidByEid" parameterType="Emp" resultType="Emp">
+        SELECT lid,did FROM emp WHERE eid=#{eid}
+    </select>
+
+</mapper>

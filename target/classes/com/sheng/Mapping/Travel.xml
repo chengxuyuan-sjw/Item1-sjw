@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org/DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.sheng.vo.Mapping.Travel">
+  <insert id="doCreat" parameterType="Travel">
+      INSERT INTO travel (seid,iid,title,sdate,edate,dest,audit,note,total,subdate) VALUES
+      (#{seid},#{iid},#{title},#{sdate},#{edate},#{dest},#{audit},#{note},#{total},#{subdate})
+  </insert>
+
+    <!--查询Travel表中重点内容,完成个人信息申请记录列表,并设置模糊查询与分页处理-->
+    <select id="findAllSpilt" parameterType="map" resultType="Travel">
+        SELECT tid,seid,iid,title,sdate,edate,subdate,dest,audit,note,ecount,total
+        FROM travel
+        <where>
+            <if test="seid !=null">
+            seid=#{seid}
+            </if>
+            <if test="column !=null and keyword !=null">
+                AND  ${column} LIKE #{keyword}
+            </if>
+        </where>
+        ORDER BY subdate DESC
+        LIMIT #{start},#{linesize}
+    </select>
+
+    <!--查询符合条件的总记录数-->
+    <select id="getAllCount" parameterType="map" resultType="int">
+        SELECT count(*) FROM travel
+        <where>
+            <if test="seid !=null">
+            seid=#{seid}
+            </if>
+            <if test="column !=null and keyword !=null">
+                AND #{column} LIKE #{keyword}
+            </if>
+        </where>
+    </select>
+
+
+
+    <!--查询全部的数据-->
+    <select id="findTravelById" parameterType="Travel" resultType="Travel">
+        SELECT tid,seid,aeid,iid,title,sdate,edate,subdate,dest,audit,note,auddate,
+        anote,ecount,total FROM travel WHERE tid=#{tid}
+    </select>
+
+    <!--更新主要数据-->
+    <update id="updateTravel" parameterType="Travel">
+        UPDATE travel SET iid=#{iid},title=#{title},sdate=#{sdate},edate=#{edate},note=#{note}
+        WHERE tid=#{tid}
+    </update>
+
+    <!--删除操作-->
+    <delete id="deleteTravel" parameterType="Travel">
+        DELETE FROM travel WHERE tid=#{tid} AND (audit=0 OR audit=2)
+    </delete>
+
+
+    <!--查询表单全部数据-->
+    <select id="findAll" resultType="Travel">
+        SELECT tid,seid,iid,title,sdate,edate,dest,audit,note,ecount,total
+        FROM travel
+    </select>
+
+    <!--更新总费用-->
+    <update id="UpdateTotal" parameterType="Travel" >
+        UPDATE travel SET total=#{total} WHERE tid=#{tid}
+    </update>
+
+    <!--审配操作,更新状态,审批时间等操作-->
+    <update id="UpdateAudit" parameterType="Travel">
+        UPDATE travel SET audit=#{audit},auddate=#{auddate} WHERE tid=#{tid}
+    </update>
+
+
+    <!--状态变更-->
+    <update id="UpdateSubmit" parameterType="Travel">
+        UPDATE travel SET audit=#{audit} WHERE tid=#{tid}
+    </update>
+
+    <!--用于查询未审核,被拒绝,已通过等分页模糊查询数据-->
+    <select id="findAllSpiltByAudit" parameterType="map" resultType="Travel">
+        SELECT tid,seid,iid,title,sdate,edate,subdate,dest,audit,note,ecount,total
+        FROM travel
+        <where>
+            <if test="audit !=null">
+                audit=#{audit}
+            </if>
+            <if test="column !=null and keyword !=null">
+                AND  ${column} LIKE #{keyword}
+            </if>
+        </where>
+        ORDER BY subdate DESC
+        LIMIT #{start},#{linesize}
+    </select>
+
+    <!--查询符合条件的总记录数-->
+    <select id="getAllCountByAudit" parameterType="map" resultType="int">
+        SELECT count(*) FROM travel
+        <where>
+            <if test="audit!=null">
+                audit=#{audit}
+            </if>
+            <if test="column !=null and keyword !=null">
+                AND #{column} LIKE #{keyword}
+            </if>
+        </where>
+    </select>
+
+    <!--设置一个定时调度类,用springTask定时更新操作,更新audit状态,3为已出行完成-->
+    <update id="UpdateTask" parameterType="date" >
+        UPDATE travel SET audit=3 WHERE audit=2 AND edate&lt;#{date}
+    </update>
+
+</mapper>
